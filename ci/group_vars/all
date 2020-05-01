@@ -1,0 +1,3 @@
+openshift_ci_project: django-psql-example-thijs-prod
+openshift_pipeline: ci-pipeline
+openshift_pipeline_git_url: 'https://bitbucket.org/mikishapiro/django-ex/raw/master/ci/pipeline-openshift-object.yml'

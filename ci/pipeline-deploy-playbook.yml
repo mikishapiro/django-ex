@@ -1,0 +1,73 @@
+---
+- name: Deploy a sample pipeline
+  hosts: localhost
+
+# There are three ways to do this
+# 1. Use 'oc' module - available but deprecated, not feature-full
+# 2. Use 'openshift_raw' module to directly interface with API - unavailable in any but most recent Ansible version
+# 3. Use shell oc command - feature full, available everywhere (chosen)
+# 
+# Vars are now in group_vars/all
+#
+###########################################################################################################
+# The following commented out section demonstrates
+# how we would do isome of this using the now-deprecated oc module (can probably be removed)
+###########################################################################################################
+#  vars: 
+#    openshift_master_host: ip-172-16-26-9.ap-southeast-2.compute.internal
+#    openshift_master_port: 443
+#    openshift_master_validate_certs: no
+#    openshift_master_token: put_me_in_ansible_vault_if_you_want_to_use_me
+#  vars_files:
+#    - secrets.yml
+#  tasks example:
+#    - name: If the project exists, blow it away
+#      ignore_error: true
+#      oc:
+#        host: "{{ openshift_master_host }}"
+#        port: "{{ openshift_master_port }}"
+#        validate_certs: "{{ openshift_master_validate_certs }}"
+#        token: "{{ openshift_master_token }}"
+#        state: absent
+#        kind: Project
+#        name: "{{ openshift_ci_project }}"
+#    - name: Create project
+#      oc:
+#        host: "{{ openshift_master_host }}"
+#        port: "{{ openshift_master_port }}"
+#        validate_certs: "{{ openshift_master_validate_certs }}"
+#        token: "{{ openshift_master_token }}"
+#        state: present
+#        inline:
+#          kind: ProjectRequest
+#          metadata:
+#            name: "{{ openshift_project }}"
+#          displayName: "{{ openshift_project_display_name }}"
+#          description: "{{ openshift_project_description }}"  
+###########################################################################################################
+
+  tasks:
+    - name: Checking if user ran oc login before this playbook
+      shell: oc whoami
+
+    - debug:
+        msg: "Setting up project {{ openshift_ci_project }}"
+
+    - name: Delete the ci project if it exists
+      shell: "oc delete project/{{ openshift_ci_project }} || /bin/true"
+
+    - name: Wait for new project creation to complete successfully
+      shell: "while ! oc new-project {{ openshift_ci_project }}; do sleep 5; done"
+
+    - name: Waiting for new project to be ready
+      shell: "while ! oc project |grep -w {{ openshift_ci_project }}; do sleep 1; done"
+
+    - name: Instantiating pipeline
+      shell: "oc create -f {{ openshift_pipeline_git_url }}"
+
+    - name: Add a bitbucket webhook trigger
+      shell: "oc set triggers bc {{ openshift_pipeline }} --from-bitbucket"
+
+    - name: Kick the tyres
+      shell: "sleep 5 ; oc start-build {{ openshift_pipeline }}"
+

@@ -1,0 +1,14 @@
+kind: "BuildConfig"
+apiVersion: "v1"
+metadata:
+  name: "ci-pipeline"
+spec:
+  nodeSelector: {}
+  runPolicy: SerialLatestOnly
+  source:
+    git:
+      uri: "https://bitbucket.org/mikishapiro/django-ex/raw/master/Jenkinsfile"
+  strategy:
+    jenkinsPipelineStrategy:
+      jenkinsfilePath: Jenkinsfile
+    type: JenkinsPipeline
