@@ -7,7 +7,7 @@ spec:
   runPolicy: SerialLatestOnly
   source:
     git:
-      uri: "https://bitbucket.org/mikishapiro/django-ex/raw/master/Jenkinsfile"
+      uri: "https://github.com/mikishapiro/django-ex/raw/master/Jenkinsfile"
   strategy:
     jenkinsPipelineStrategy:
       jenkinsfilePath: Jenkinsfile
